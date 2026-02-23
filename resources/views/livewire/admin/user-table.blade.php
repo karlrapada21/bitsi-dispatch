@@ -63,9 +63,9 @@
                                 <td class="px-4 py-3 font-medium">{{ $user->name }}</td>
                                 <td class="px-4 py-3">{{ $user->email }}</td>
                                 <td class="px-4 py-3">
-                                    @php $userRole = UserRole::tryFrom($user->role); @endphp
+                                    @php $userRole = is_string($user->role) || is_int($user->role) ? UserRole::tryFrom($user->role) : $user->role; @endphp
                                     <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {{ $userRole?->badgeClass() ?? 'bg-gray-100 text-gray-700' }}">
-                                        {{ $userRole?->label() ?? ucwords(str_replace('_', ' ', $user->role)) }}
+                                        {{ $userRole?->label() ?? ucwords(str_replace('_', ' ', $user->role?->value ?? $user->role)) }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">{{ $user->phone ?? '--' }}</td>

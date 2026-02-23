@@ -15,11 +15,21 @@
         <script>
             (function() {
                 const theme = localStorage.getItem('theme') || 'system';
-                if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
+                function applyTheme(theme) {
+                    if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
                 }
+                applyTheme(theme);
+                
+                // Listen for system theme changes
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    if (localStorage.getItem('theme') === 'system') {
+                        applyTheme('system');
+                    }
+                });
             })();
         </script>
 
@@ -33,14 +43,19 @@
         {{-- SidebarProvider wrapper --}}
         <div
             x-data="{
-                sidebarOpen: JSON.parse(localStorage.getItem('sidebar') ?? 'true'),
+                sidebarOpen: false,
                 mobileOpen: false,
+                init() {
+                    // Initialize sidebar state from localStorage
+                    const saved = localStorage.getItem('sidebar');
+                    this.sidebarOpen = saved === null ? true : saved === 'true';
+                },
                 toggleSidebar() {
                     if (window.innerWidth < 768) {
                         this.mobileOpen = !this.mobileOpen;
                     } else {
                         this.sidebarOpen = !this.sidebarOpen;
-                        localStorage.setItem('sidebar', JSON.stringify(this.sidebarOpen));
+                        localStorage.setItem('sidebar', this.sidebarOpen ? 'true' : 'false');
                     }
                 }
             }"

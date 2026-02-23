@@ -31,11 +31,13 @@
     {{-- Date Picker --}}
     <div class="flex items-center gap-3">
         <label class="text-sm font-medium">Date:</label>
-        <input
-            type="date"
-            wire:model.live="date"
-            class="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring w-44"
-        />
+        <div class="relative">
+            <input
+                type="date"
+                wire:model.live="date"
+                class="flex h-9 w-44 rounded-md border border-input bg-transparent px-3 py-1 pr-10 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+        </div>
     </div>
 
     {{-- Flash Messages --}}

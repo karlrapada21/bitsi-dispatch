@@ -68,11 +68,17 @@
                     </thead>
                     <tbody>
                         @forelse ($vehicles as $vehicle)
-                            <tr class="border-b last:border-0 hover:bg-muted/30 transition-colors {{ $vehicle->trashed() ? 'opacity-60' : '' }}">
-                                <td class="px-4 py-3 font-semibold">{{ $vehicle->bus_number }}</td>
-                                <td class="px-4 py-3">{{ $vehicle->brand }}</td>
-                                <td class="px-4 py-3">{{ $vehicle->bus_type?->label() ?? $vehicle->bus_type }}</td>
-                                <td class="px-4 py-3">{{ $vehicle->plate_number }}</td>
+                            @php
+                                $pmsPercentage = $vehicle->pms_percentage ?? 0;
+                                $isPmsOver = ($vehicle->current_pms_value ?? 0) > ($vehicle->pms_threshold ?? 0);
+                                $isPmsWarning = $pmsPercentage >= 80 && !$isPmsOver;
+                                $rowClass = $isPmsOver ? 'bg-red-50 dark:bg-red-900/20 hover:bg-red-100/50 dark:hover:bg-red-900/30' : ($isPmsWarning ? 'bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100/50 dark:hover:bg-orange-900/30' : 'hover:bg-muted/30');
+                            @endphp
+                            <tr class="border-b last:border-0 transition-colors {{ $rowClass }} {{ $vehicle->trashed() ? 'opacity-60' : '' }}">
+                                <td class="px-4 py-3 font-semibold {{ $isPmsOver ? 'text-red-700 dark:text-red-400' : '' }}">{{ $vehicle->bus_number }}</td>
+                                <td class="px-4 py-3 {{ $isPmsOver ? 'text-red-700 dark:text-red-400' : '' }}">{{ $vehicle->brand }}</td>
+                                <td class="px-4 py-3 {{ $isPmsOver ? 'text-red-700 dark:text-red-400' : '' }}">{{ $vehicle->bus_type?->label() ?? $vehicle->bus_type }}</td>
+                                <td class="px-4 py-3 {{ $isPmsOver ? 'text-red-700 dark:text-red-400' : '' }}">{{ $vehicle->plate_number }}</td>
                                 <td class="px-4 py-3">
                                     @php $vStatus = $vehicle->status ?? VehicleStatus::OK; @endphp
                                     <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {{ $vStatus->badgeClass() }}">
@@ -81,8 +87,7 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     @php
-                                        $pmsPercentage = $vehicle->pms_percentage ?? 0;
-                                        $pmsBarColor = $pmsPercentage >= 80 ? 'bg-red-500' : ($pmsPercentage >= 60 ? 'bg-orange-500' : 'bg-green-500');
+                                        $pmsBarColor = $isPmsOver ? 'bg-red-600' : ($pmsPercentage >= 80 ? 'bg-orange-500' : ($pmsPercentage >= 60 ? 'bg-yellow-500' : 'bg-green-500'));
                                     @endphp
                                     <div class="flex items-center gap-2">
                                         <div class="h-2 w-16 rounded-full bg-gray-200 dark:bg-gray-700">
@@ -90,8 +95,10 @@
                                                  style="width: {{ min($pmsPercentage, 100) }}%">
                                             </div>
                                         </div>
-                                        <span class="text-xs text-muted-foreground">{{ $vehicle->current_pms_value ?? 0 }}/{{ $vehicle->pms_threshold ?? 0 }}</span>
-                                        @if ($vehicle->is_pms_warning)
+                                        <span class="text-xs text-muted-foreground {{ $isPmsOver ? 'font-semibold text-red-700 dark:text-red-400' : '' }}">{{ $vehicle->current_pms_value ?? 0 }}/{{ $vehicle->pms_threshold ?? 0 }}</span>
+                                        @if ($isPmsOver)
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                                        @elseif ($vehicle->is_pms_warning)
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
                                         @endif
                                     </div>

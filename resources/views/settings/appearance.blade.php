@@ -26,14 +26,17 @@
                 {{-- Theme Toggle --}}
                 <div x-data="{
                     theme: localStorage.getItem('theme') || 'system',
-                    setTheme(value) {
-                        this.theme = value;
-                        localStorage.setItem('theme', value);
+                    applyTheme(value) {
                         if (value === 'dark' || (value === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                             document.documentElement.classList.add('dark');
                         } else {
                             document.documentElement.classList.remove('dark');
                         }
+                    },
+                    setTheme(value) {
+                        this.theme = value;
+                        localStorage.setItem('theme', value);
+                        this.applyTheme(value);
                     }
                 }">
                     <div class="grid grid-cols-3 gap-4">

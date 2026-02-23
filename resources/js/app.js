@@ -1,6 +1,6 @@
 // Dark mode initialization — runs before paint to prevent flash
 function initializeTheme() {
-    const saved = localStorage.getItem('appearance');
+    const saved = localStorage.getItem('theme');
     if (saved === 'dark') {
         document.documentElement.classList.add('dark');
     } else if (saved === 'light') {
@@ -20,7 +20,7 @@ initializeTheme();
 
 // Listen for system theme changes
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    const saved = localStorage.getItem('appearance');
+    const saved = localStorage.getItem('theme');
     if (!saved || saved === 'system') {
         initializeTheme();
     }
@@ -28,7 +28,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 
 // Expose for Alpine.js usage
 window.updateTheme = function(value) {
-    localStorage.setItem('appearance', value);
+    localStorage.setItem('theme', value);
     if (value === 'system') {
         const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.classList.toggle('dark', systemTheme === 'dark');

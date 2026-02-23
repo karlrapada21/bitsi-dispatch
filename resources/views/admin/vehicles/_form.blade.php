@@ -78,14 +78,31 @@
         </div>
         <div class="space-y-2">
             <label for="pms_threshold" class="text-sm font-medium leading-none">PMS Threshold</label>
-            <input id="pms_threshold" name="pms_threshold" type="number" value="{{ old('pms_threshold', $v->pms_threshold ?? 10000) }}" min="0" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+            <div class="flex items-center gap-2">
+                <input id="pms_threshold" name="pms_threshold" type="text" value="{{ old('pms_threshold', $v->pms_threshold ?? 10000) }}" data-type="number" data-max="50000"
+                    oninput="formatNumberInput(this)"
+                    class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+            </div>
+            <input id="pms_threshold_slider" type="range" min="0" max="50000" step="100" value="{{ old('pms_threshold', $v->pms_threshold ?? 10000) }}" 
+                oninput="updateNumberInput('pms_threshold', this.value)"
+                class="w-full accent-primary" />
+            <p class="text-xs text-muted-foreground">Max: 50,000</p>
             @error('pms_threshold')
                 <p class="text-xs text-red-500">{{ $message }}</p>
             @enderror
         </div>
         <div class="space-y-2">
             <label for="current_pms_value" class="text-sm font-medium leading-none">Current Value</label>
-            <input id="current_pms_value" name="current_pms_value" type="number" value="{{ old('current_pms_value', $v->current_pms_value ?? 0) }}" min="0" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+            <div class="flex items-center gap-2">
+                <input id="current_pms_value" name="current_pms_value" type="text" value="{{ old('current_pms_value', $v->current_pms_value ?? 0) }}" data-type="number" data-max="100000"
+                    oninput="formatNumberInput(this)"
+                    class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+            </div>
+            <input id="current_pms_value_slider" type="range" min="0" max="100000" step="100" value="{{ old('current_pms_value', $v->current_pms_value ?? 0) }}" 
+                oninput="updateNumberInput('current_pms_value', this.value)"
+                class="w-full accent-primary" />
+            <p class="text-xs text-muted-foreground">Max: 100,000</p>
+            <div id="current_pms_value_warning"></div>
             @error('current_pms_value')
                 <p class="text-xs text-red-500">{{ $message }}</p>
             @enderror
@@ -93,6 +110,124 @@
     </div>
     <div class="mt-4 space-y-2">
         <label for="last_pms_date" class="text-sm font-medium leading-none">Last PMS Date</label>
-        <input id="last_pms_date" name="last_pms_date" type="date" value="{{ old('last_pms_date', $v->last_pms_date ?? '') }}" class="flex h-9 max-w-xs rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+        <div class="relative max-w-xs">
+            <input id="last_pms_date" name="last_pms_date" type="date" value="{{ old('last_pms_date', $v->last_pms_date ?? '') }}" 
+                class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 pr-10 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+        </div>
     </div>
 </div>
+
+<script>
+function formatNumberInput(input) {
+    // Remove all non-numeric characters
+    let value = input.value.replace(/[^0-9]/g, '');
+    
+    // Don't allow empty value
+    if (value === '') {
+        input.value = '';
+        input.setAttribute('data-raw-value', '0');
+        updateSlider(input.id, 0);
+        validatePmsValues();
+        return;
+    }
+    
+    // Parse as integer
+    let numValue = parseInt(value, 10);
+    const maxValue = parseInt(input.getAttribute('data-max'), 10) || 100000;
+    
+    // Cap at max value
+    if (numValue > maxValue) {
+        numValue = maxValue;
+    }
+    
+    // Store raw value
+    input.setAttribute('data-raw-value', numValue.toString());
+    
+    // Format with commas
+    input.value = numValue.toLocaleString('en-US');
+    
+    // Update corresponding slider
+    updateSlider(input.id, numValue);
+    
+    // Validate PMS values
+    validatePmsValues();
+}
+
+function updateNumberInput(inputId, value) {
+    const input = document.getElementById(inputId);
+    const numValue = parseInt(value, 10) || 0;
+    
+    // Store raw value
+    input.setAttribute('data-raw-value', numValue.toString());
+    
+    // Format with commas
+    input.value = numValue.toLocaleString('en-US');
+    
+    // Validate PMS values
+    validatePmsValues();
+}
+
+function updateSlider(inputId, value) {
+    const sliderId = inputId + '_slider';
+    const slider = document.getElementById(sliderId);
+    if (slider) {
+        slider.value = value;
+    }
+}
+
+function getRawValue(input) {
+    return parseInt(input.getAttribute('data-raw-value'), 10) || 0;
+}
+
+function validatePmsValues() {
+    const thresholdInput = document.getElementById('pms_threshold');
+    const currentInput = document.getElementById('current_pms_value');
+    const warningContainer = document.getElementById('current_pms_value_warning');
+    
+    if (!thresholdInput || !currentInput || !warningContainer) return;
+    
+    const threshold = getRawValue(thresholdInput);
+    const current = getRawValue(currentInput);
+    
+    // Clear existing warning
+    warningContainer.innerHTML = '';
+    
+    // Check if current value exceeds threshold - show WARNING (not error)
+    if (threshold > 0 && current > 0 && current > threshold) {
+        warningContainer.innerHTML = '<p class="text-xs text-orange-500 mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="inline h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Current PMS value exceeds threshold - requires investigation</p>';
+    }
+}
+
+// Initialize all number inputs on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[data-type="number"]').forEach(function(input) {
+        // Store initial raw value
+        const rawValue = input.value.replace(/,/g, '');
+        input.setAttribute('data-raw-value', rawValue || '0');
+        
+        // Format initial value with commas
+        if (rawValue) {
+            input.value = parseInt(rawValue, 10).toLocaleString('en-US');
+        }
+    });
+    
+    // Validate on initial load
+    validatePmsValues();
+});
+
+// Form submission - convert formatted values back to raw numbers
+document.querySelector('form[method="POST"][action*="vehicles"]')?.addEventListener('submit', function(e) {
+    document.querySelectorAll('input[data-type="number"]').forEach(function(input) {
+        const rawValue = getRawValue(input);
+        // Create hidden input with raw value
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = input.name;
+        hiddenInput.value = rawValue;
+        this.appendChild(hiddenInput);
+        // Disable the formatted input so it doesn't get submitted
+        input.disabled = true;
+    }, this);
+});
+</script>

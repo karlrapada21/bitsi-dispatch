@@ -99,9 +99,19 @@
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-1">
                                         @foreach (DriverStatus::cases() as $s)
+                                            @php
+                                                $isActive = ($driver->status ?? DriverStatus::Available) === $s;
+                                                $statusColors = [
+                                                    'available' => 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-300 dark:hover:bg-green-800',
+                                                    'dispatched' => 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800',
+                                                    'on_route' => 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-300 dark:hover:bg-indigo-800',
+                                                    'on_leave' => 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900 dark:text-orange-300 dark:hover:bg-orange-800',
+                                                ];
+                                                $activeClass = $isActive ? 'ring-2 ring-offset-1 ' . str_replace('bg-', 'ring-', $statusColors[$s->value]) : '';
+                                            @endphp
                                             <button
                                                 wire:click="updateStatus({{ $driver->id }}, '{{ $s->value }}')"
-                                                class="rounded px-2 py-1 text-xs font-medium transition-colors {{ ($driver->status ?? DriverStatus::Available) === $s ? $s->buttonActiveClass() : 'bg-muted text-muted-foreground hover:bg-muted/80' }}"
+                                                class="rounded px-2 py-1 text-xs font-medium transition-colors {{ $statusColors[$s->value] }} {{ $activeClass }}"
                                                 title="Set {{ $s->label() }}"
                                             >
                                                 {{ $s->label() }}

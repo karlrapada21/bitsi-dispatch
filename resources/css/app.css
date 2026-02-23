@@ -7,6 +7,10 @@ html {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+[x-cloak] {
+    display: none !important;
+}
+
 @layer base {
     :root {
         --background: 0 0% 100%;
@@ -87,5 +91,11 @@ html {
 
     body {
         @apply bg-background text-foreground;
+        background-color: hsl(var(--background));
+        color: hsl(var(--foreground));
+    }
+
+    html {
+        background-color: hsl(var(--background));
     }
 }

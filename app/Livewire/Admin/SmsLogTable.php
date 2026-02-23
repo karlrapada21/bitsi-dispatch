@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Enums\SmsStatus;
 use App\Jobs\SendSmsJob;
 use App\Models\SmsLog;
 use Livewire\Component;
@@ -16,12 +17,38 @@ class SmsLogTable extends Component
     public string $dateFrom = '';
     public string $dateTo = '';
 
+    // Modal state
+    public bool $showCreateModal = false;
+    public bool $showEditModal = false;
+    public bool $showViewModal = false;
+    public bool $showDeleteModal = false;
+
+    // Form fields
+    public ?int $editingSmsLogId = null;
+    public ?int $viewingSmsLogId = null;
+    public ?int $deletingSmsLogId = null;
+
+    public string $recipientPhone = '';
+    public string $message = '';
+    public string $status = '';
+    public ?int $dispatchEntryId = null;
+
     protected $queryString = [
         'search' => ['except' => ''],
         'statusFilter' => ['except' => '', 'as' => 'status'],
         'dateFrom' => ['except' => '', 'as' => 'from'],
         'dateTo' => ['except' => '', 'as' => 'to'],
     ];
+
+    protected function rules(): array
+    {
+        return [
+            'recipientPhone' => 'required|string|max:20',
+            'message' => 'required|string|max:160',
+            'status' => 'required|in:pending,sent,failed',
+            'dispatchEntryId' => 'nullable|exists:dispatch_entries,id',
+        ];
+    }
 
     public function updatingSearch(): void
     {
@@ -41,6 +68,109 @@ class SmsLogTable extends Component
     public function updatingDateTo(): void
     {
         $this->resetPage();
+    }
+
+    public function openCreateModal(): void
+    {
+        $this->resetForm();
+        $this->status = 'pending';
+        $this->showCreateModal = true;
+    }
+
+    public function openEditModal(int $smsLogId): void
+    {
+        $log = SmsLog::findOrFail($smsLogId);
+        $this->editingSmsLogId = $smsLogId;
+        $this->recipientPhone = $log->recipient_phone;
+        $this->message = $log->message;
+        $this->status = $log->status->value;
+        $this->dispatchEntryId = $log->dispatch_entry_id;
+        $this->showEditModal = true;
+    }
+
+    public function openViewModal(int $smsLogId): void
+    {
+        $this->viewingSmsLogId = $smsLogId;
+        $this->showViewModal = true;
+    }
+
+    public function openDeleteModal(int $smsLogId): void
+    {
+        $this->deletingSmsLogId = $smsLogId;
+        $this->showDeleteModal = true;
+    }
+
+    public function sendSms(int $smsLogId): void
+    {
+        $log = SmsLog::findOrFail($smsLogId);
+
+        SendSmsJob::dispatch(
+            $log->recipient_phone,
+            $log->message,
+            $log->dispatch_entry_id
+        );
+
+        session()->flash('status', 'SMS queued for sending to ' . $log->recipient_phone);
+    }
+
+    public function closeModals(): void
+    {
+        $this->showCreateModal = false;
+        $this->showEditModal = false;
+        $this->showViewModal = false;
+        $this->showDeleteModal = false;
+        $this->resetForm();
+    }
+
+    private function resetForm(): void
+    {
+        $this->editingSmsLogId = null;
+        $this->viewingSmsLogId = null;
+        $this->deletingSmsLogId = null;
+        $this->recipientPhone = '';
+        $this->message = '';
+        $this->status = '';
+        $this->dispatchEntryId = null;
+    }
+
+    public function createSmsLog(): void
+    {
+        $this->validate();
+
+        SmsLog::create([
+            'recipient_phone' => $this->recipientPhone,
+            'message' => $this->message,
+            'status' => $this->status,
+            'dispatch_entry_id' => $this->dispatchEntryId,
+        ]);
+
+        session()->flash('status', 'SMS log created successfully.');
+        $this->closeModals();
+    }
+
+    public function updateSmsLog(): void
+    {
+        $this->validate();
+
+        $log = SmsLog::findOrFail($this->editingSmsLogId);
+        $log->update([
+            'recipient_phone' => $this->recipientPhone,
+            'message' => $this->message,
+            'status' => $this->status,
+            'dispatch_entry_id' => $this->dispatchEntryId,
+        ]);
+
+        session()->flash('status', 'SMS log updated successfully.');
+        $this->closeModals();
+    }
+
+    public function deleteSmsLog(): void
+    {
+        $log = SmsLog::findOrFail($this->deletingSmsLogId);
+        $log->delete();
+
+        session()->flash('status', 'SMS log deleted successfully.');
+        $this->closeModals();
     }
 
     public function retrySms(int $smsLogId): void

@@ -32,6 +32,10 @@ class VehicleController extends Controller
             'plate_number' => ['required', 'string', 'min:4', 'max:20', 'regex:/^[A-Z0-9\- ]+$/i', 'unique:vehicles,plate_number'],
         ]));
 
+        // Parse comma-formatted numbers
+        $validated['pms_threshold'] = (int) str_replace(',', '', $validated['pms_threshold']);
+        $validated['current_pms_value'] = (int) str_replace(',', '', $validated['current_pms_value']);
+
         Vehicle::create($validated);
 
         return redirect()->route('admin.vehicles.index');
@@ -54,6 +58,10 @@ class VehicleController extends Controller
             'plate_number' => ['required', 'string', 'min:4', 'max:20', 'regex:/^[A-Z0-9\- ]+$/i', Rule::unique('vehicles', 'plate_number')->ignore($vehicle->id)],
         ]));
 
+        // Parse comma-formatted numbers
+        $validated['pms_threshold'] = (int) str_replace(',', '', $validated['pms_threshold']);
+        $validated['current_pms_value'] = (int) str_replace(',', '', $validated['current_pms_value']);
+
         $vehicle->update($validated);
 
         return redirect()->route('admin.vehicles.index');
@@ -74,8 +82,8 @@ class VehicleController extends Controller
             'status' => ['required', 'string', new Enum(VehicleStatus::class)],
             'gps_device_id' => 'nullable|string|max:100',
             'pms_unit' => ['required', 'string', new Enum(PmsUnit::class)],
-            'pms_threshold' => 'required|integer|min:0',
-            'current_pms_value' => 'required|integer|min:0',
+            'pms_threshold' => 'required|string|regex:/^[0-9,]+$/',
+            'current_pms_value' => 'required|string|regex:/^[0-9,]+$/',
             'last_pms_date' => 'nullable|date',
         ];
     }

@@ -5,11 +5,15 @@
             <div class="flex flex-wrap items-end gap-4">
                 <div class="space-y-2">
                     <label for="date_from" class="text-sm font-medium leading-none">From Date</label>
-                    <input type="date" id="date_from" wire:model.live.debounce.300ms="dateFrom" class="flex h-9 w-44 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                    <div class="relative">
+                        <input type="date" id="date_from" wire:model.live.debounce.300ms="dateFrom" class="flex h-9 w-44 rounded-md border border-input bg-transparent px-3 py-1 pr-10 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                    </div>
                 </div>
                 <div class="space-y-2">
                     <label for="date_to" class="text-sm font-medium leading-none">To Date</label>
-                    <input type="date" id="date_to" wire:model.live.debounce.300ms="dateTo" class="flex h-9 w-44 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                    <div class="relative">
+                        <input type="date" id="date_to" wire:model.live.debounce.300ms="dateTo" class="flex h-9 w-44 rounded-md border border-input bg-transparent px-3 py-1 pr-10 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                    </div>
                 </div>
             </div>
         </div>

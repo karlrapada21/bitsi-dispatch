@@ -28,8 +28,8 @@
                 <option value="{{ $type }}">{{ $this->getShortModelName($type) }}</option>
             @endforeach
         </select>
-        <input type="date" wire:model.live="dateFrom" class="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
-        <input type="date" wire:model.live="dateTo" class="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+        <input type="date" wire:model.live="dateFrom" class="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 pr-10 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+        <input type="date" wire:model.live="dateTo" class="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 pr-10 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
     </div>
 
     {{-- Table --}}
