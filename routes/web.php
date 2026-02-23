@@ -13,6 +13,11 @@ use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\Report\ReportController;
 use Illuminate\Support\Facades\Route;
 
+// Health check endpoint for Railway
+Route::get('/up', function () {
+    return response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]);
+})->name('health');
+
 Route::get('/', function () {
     return view('welcome');
 })->name('home');

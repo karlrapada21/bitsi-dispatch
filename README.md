@@ -546,6 +546,112 @@ Run `php artisan storage:link` to create the `public/storage` symlink.
 ### v1.0
 - Project scaffolding and database design
 
+
+## Railway Deployment
+
+This application is configured for deployment on [Railway](https://railway.app/).
+
+### Prerequisites
+
+1. A Railway account
+2. A GitHub repository with your code pushed
+
+### Deployment Steps
+
+1. **Create a new project on Railway**
+   - Go to [Railway Dashboard](https://railway.app/dashboard)
+   - Click "New Project" → "Deploy from GitHub repo"
+   - Select your repository
+
+2. **Add MySQL Database**
+   - In your project, click "Add Service" → "Database" → "Add MySQL"
+   - Railway will automatically provision a MySQL database
+   - Note the generated service name (usually `mysql`)
+
+3. **Configure Environment Variables**
+   
+   Set the following variables in your Railway web service:
+
+   | Variable | Value | Notes |
+   |----------|-------|-------|
+   | `APP_ENV` | `production` | Production environment |
+   | `APP_DEBUG` | `false` | Disable debug mode |
+   | `APP_KEY` | (generate locally) | Run `php artisan key:generate --show` |
+   | `APP_URL` | `https://your-app.railway.app` | Your Railway domain |
+   | `DB_URL` | `${{MySQL.MYSQL_URL}}` | Reference MySQL service URL |
+   | `DB_CONNECTION` | `mysql` | Database driver |
+   | `SESSION_DRIVER` | `database` | Session storage |
+   | `CACHE_STORE` | `database` | Cache storage |
+   | `QUEUE_CONNECTION` | `database` | Queue driver |
+   | `SEMAPHORE_API_KEY` | (your key) | Optional: SMS API key |
+   | `SEMAPHORE_SENDER_NAME` | `BITSI` | SMS sender name |
+
+4. **Connect MySQL to Web Service**
+   - In your web service, add a variable: `DB_URL = ${{MySQL.MYSQL_URL}}`
+   - Or use individual variables: `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
+
+5. **Configure Health Check**
+   - Railway will automatically use the `/up` endpoint for health checks
+   - The endpoint is defined in `routes/web.php`
+
+### Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `railway.toml` | Railway-specific deployment configuration |
+| `nixpacks.toml` | Build configuration for Nixpacks builder |
+| `railpack.json` | PHP extensions and build settings |
+
+### Health Check Endpoint
+
+The application includes a health check endpoint at `/up` that returns:
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2026-02-23T14:30:00+00:00"
+}
+```
+
+This endpoint is used by Railway to monitor application health.
+
+### Troubleshooting Deployment
+
+<details>
+<summary><strong>Database connection errors</strong></summary>
+
+Ensure `DB_URL` is correctly referencing the MySQL service:
+- Variable should be `DB_URL = ${{MySQL.MYSQL_URL}}`
+- Check that MySQL service is running
+- Verify the database was created (migrations run automatically on deploy)
+</details>
+
+<details>
+<summary><strong>Application key not set</strong></summary>
+
+Generate an app key locally and set it as a Railway variable:
+```bash
+php artisan key:generate --show
+# Copy the output and set as APP_KEY in Railway
+```
+</details>
+
+<details>
+<summary><strong>Build failures</strong></summary>
+
+1. Check build logs in Railway dashboard
+2. Ensure all required PHP extensions are listed in `railpack.json`
+3. Verify `composer.json` has correct PHP version requirements
+</details>
+
+<details>
+<summary><strong>Memory or timeout issues</strong></summary>
+
+- Upgrade to a higher tier plan if needed
+- Increase health check timeout in `railway.toml`
+- Consider using a separate worker for queues
+</details>
+
 ---
 
 ## Tools Used

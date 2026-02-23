@@ -1,5 +1,22 @@
 {
+  "$schema": "https://schema.railpack.com",
   "php": {
-    "extensions": ["gd", "zip", "iconv", "simplexml", "xmlreader", "xmlwriter", "zlib"]
-  }
+    "extensions": ["gd", "zip", "iconv", "simplexml", "xmlreader", "xmlwriter", "zlib", "pdo_mysql", "mysqli", "curl", "mbstring", "openssl"]
+  },
+  "services": {
+    "web": {
+      "startCommand": "php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan serve --host 0.0.0.0 --port $PORT",
+      "healthcheck": {
+        "path": "/up",
+        "interval": "30s",
+        "timeout": "10s",
+        "startPeriod": "60s"
+      }
+    }
+  },
+  "install": [
+    "composer install --no-dev --optimize-autoloader",
+    "npm ci",
+    "npm run build"
+  ]
 }
