@@ -76,7 +76,12 @@
         },
         "platform": {
             "php": "8.4.0",
-            "ext-gd": "1.0" 
+            "ext-gd": "1.0",
+            "ext-zip": "1.0",
+            "ext-xml": "1.0",
+            "ext-xmlreader": "1.0",
+            "ext-xmlwriter": "1.0",
+            "ext-zlib": "1.0"
         }
     },
     "minimum-stability": "stable",
