@@ -23,44 +23,62 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Users
-        $admin = User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@bitsi.com',
-            'password' => bcrypt('password'),
-            'role' => UserRole::Admin,
-            'phone' => '09171234567',
-            'is_active' => true,
-        ]);
+        // Run RoleSeeder first to create Spatie roles
+        $this->call(RoleSeeder::class);
 
-        User::create([
-            'name' => 'Operations Manager',
-            'email' => 'opsmanager@bitsi.com',
-            'password' => bcrypt('password'),
-            'role' => UserRole::OperationsManager,
-            'phone' => '09172345678',
-            'is_active' => true,
-        ]);
+        // Users (use firstOrCreate to avoid duplicates on re-seed)
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@bitsi.com'],
+            [
+                'name' => 'Admin User',
+                'password' => bcrypt('password'),
+                'role' => UserRole::Admin,
+                'phone' => '09171234567',
+                'is_active' => true,
+            ]
+        );
+        if (!$admin->hasRole('admin')) {
+            $admin->assignRole('admin');
+        }
 
-        $dispatcher = User::create([
-            'name' => 'Dispatcher',
-            'email' => 'dispatcher@bitsi.com',
-            'password' => bcrypt('password'),
-            'role' => UserRole::Dispatcher,
-            'phone' => '09173456789',
-            'is_active' => true,
-        ]);
+        $opsManager = User::firstOrCreate(
+            ['email' => 'opsmanager@bitsi.com'],
+            [
+                'name' => 'Operations Manager',
+                'password' => bcrypt('password'),
+                'role' => UserRole::OperationsManager,
+                'phone' => '09172345678',
+                'is_active' => true,
+            ]
+        );
+        if (!$opsManager->hasRole('operations_manager')) {
+            $opsManager->assignRole('operations_manager');
+        }
 
-        // Drivers
+        $dispatcher = User::firstOrCreate(
+            ['email' => 'dispatcher@bitsi.com'],
+            [
+                'name' => 'Dispatcher',
+                'password' => bcrypt('password'),
+                'role' => UserRole::Dispatcher,
+                'phone' => '09173456789',
+                'is_active' => true,
+            ]
+        );
+        if (!$dispatcher->hasRole('dispatcher')) {
+            $dispatcher->assignRole('dispatcher');
+        }
+
+        // Drivers (use firstOrCreate to avoid duplicates)
         $drivers = collect([
             ['name' => 'Juan Dela Cruz', 'phone' => '09181111111', 'license_number' => 'N01-12-345678'],
             ['name' => 'Pedro Santos', 'phone' => '09182222222', 'license_number' => 'N02-13-456789'],
             ['name' => 'Mario Reyes', 'phone' => '09183333333', 'license_number' => 'N03-14-567890'],
             ['name' => 'Carlos Garcia', 'phone' => '09184444444', 'license_number' => 'N04-15-678901'],
             ['name' => 'Roberto Cruz', 'phone' => '09185555555', 'license_number' => 'N05-16-789012'],
-        ])->map(fn($d) => Driver::create($d));
+        ])->map(fn($d) => Driver::firstOrCreate(['license_number' => $d['license_number']], $d));
 
-        // Vehicles
+        // Vehicles (use firstOrCreate to avoid duplicates)
         $vehicles = collect([
             ['bus_number' => '1001', 'brand' => 'Hino', 'bus_type' => BusType::Regular, 'plate_number' => 'ABC 1234', 'status' => VehicleStatus::OK, 'pms_threshold' => 15000, 'current_pms_value' => 5000],
             ['bus_number' => '1002', 'brand' => 'Hino', 'bus_type' => BusType::Deluxe, 'plate_number' => 'DEF 5678', 'status' => VehicleStatus::OK, 'pms_threshold' => 15000, 'current_pms_value' => 12000],
@@ -72,9 +90,9 @@ class DatabaseSeeder extends Seeder
             ['bus_number' => '1008', 'brand' => 'Yutong', 'bus_type' => BusType::Deluxe, 'plate_number' => 'VWX 9012', 'status' => VehicleStatus::Lutaw, 'idle_days' => 5],
             ['bus_number' => '1009', 'brand' => 'Daewoo', 'bus_type' => BusType::SingleSeater, 'plate_number' => 'YZA 3456', 'status' => VehicleStatus::OK, 'pms_threshold' => 12000, 'current_pms_value' => 2000],
             ['bus_number' => '1010', 'brand' => 'Hino', 'bus_type' => BusType::Regular, 'plate_number' => 'BCD 7890', 'status' => VehicleStatus::OK, 'pms_threshold' => 15000, 'current_pms_value' => 10500],
-        ])->map(fn($v) => Vehicle::create($v));
+        ])->map(fn($v) => Vehicle::firstOrCreate(['bus_number' => $v['bus_number']], $v));
 
-        // Trip Codes — Southbound (Cubao → Bicol destinations)
+        // Trip Codes (use firstOrCreate to avoid duplicates)
         $tripCodes = collect([
             ['code' => 'SB-001', 'operator' => 'BITSI', 'origin_terminal' => 'Cubao', 'destination_terminal' => 'Naga', 'bus_type' => BusType::Regular, 'scheduled_departure_time' => '06:00', 'direction' => Direction::SB],
             ['code' => 'SB-002', 'operator' => 'BITSI', 'origin_terminal' => 'Cubao', 'destination_terminal' => 'Naga', 'bus_type' => BusType::Deluxe, 'scheduled_departure_time' => '08:00', 'direction' => Direction::SB],
@@ -97,12 +115,21 @@ class DatabaseSeeder extends Seeder
             ['code' => 'NB-008', 'operator' => 'BITSI', 'origin_terminal' => 'Masbate', 'destination_terminal' => 'Naga', 'bus_type' => BusType::Regular, 'scheduled_departure_time' => '05:00', 'direction' => Direction::NB],
             ['code' => 'NB-009', 'operator' => 'BITSI', 'origin_terminal' => 'Tacloban', 'destination_terminal' => 'Cubao', 'bus_type' => BusType::Elite, 'scheduled_departure_time' => '17:00', 'direction' => Direction::NB],
             ['code' => 'NB-010', 'operator' => 'BITSI', 'origin_terminal' => 'Naga', 'destination_terminal' => 'Cubao', 'bus_type' => BusType::Sleeper, 'scheduled_departure_time' => '22:00', 'direction' => Direction::NB],
-        ])->map(fn($tc) => TripCode::create($tc));
+        ])->map(fn($tc) => TripCode::firstOrCreate(['code' => $tc['code']], $tc));
 
-        // PMS Settings
-        PmsSetting::create(['name' => 'Standard PMS (15,000 km)', 'unit' => PmsUnit::Kilometers, 'threshold' => 15000, 'description' => 'Standard preventive maintenance every 15,000 km', 'is_default' => true]);
-        PmsSetting::create(['name' => 'Heavy Duty PMS (20,000 km)', 'unit' => PmsUnit::Kilometers, 'threshold' => 20000, 'description' => 'For heavy-duty vehicles']);
-        PmsSetting::create(['name' => 'Trip-based PMS (500 trips)', 'unit' => PmsUnit::Trips, 'threshold' => 500, 'description' => 'Maintenance based on trip count']);
+        // PMS Settings (use firstOrCreate to avoid duplicates)
+        PmsSetting::firstOrCreate(
+            ['name' => 'Standard PMS (15,000 km)'],
+            ['unit' => PmsUnit::Kilometers, 'threshold' => 15000, 'description' => 'Standard preventive maintenance every 15,000 km', 'is_default' => true]
+        );
+        PmsSetting::firstOrCreate(
+            ['name' => 'Heavy Duty PMS (20,000 km)'],
+            ['unit' => PmsUnit::Kilometers, 'threshold' => 20000, 'description' => 'For heavy-duty vehicles']
+        );
+        PmsSetting::firstOrCreate(
+            ['name' => 'Trip-based PMS (500 trips)'],
+            ['unit' => PmsUnit::Trips, 'threshold' => 500, 'description' => 'Maintenance based on trip count']
+        );
 
         // Sample Dispatch Day for today
         $dispatchDay = DispatchDay::create([
